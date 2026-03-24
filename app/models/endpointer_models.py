@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase, relationship
-from sqlalchemy import DateTime, String, Integer, ForeignKey, Boolean, func, TIMESTAMP
+from sqlalchemy import DateTime, String, Integer, ForeignKey, Boolean, func, TIMESTAMP, UniqueConstraint
 
 from datetime import datetime
 
@@ -21,12 +21,16 @@ class Site(Base):
 
     endpoints: Mapped[List["Endpoint"]] = relationship(back_populates='site')
 
+# ДОБАВИТЬ УДАЛЕНИЕ НА УДАЛЕНИИ! ON DELETE CASCADE!
+
 class Endpoint(Base):
     __tablename__ = "endpoints"
 
+    __table_args__ = (UniqueConstraint('site_id', 'path', name='site_path_uc'), )
+
     id: Mapped[int] = mapped_column(primary_key=True)
-    path: Mapped [str]
-    sampling_interval: Mapped[int]
+    path: Mapped[str]
+    sampling_interval: Mapped[int] = mapped_column(nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean)
 
     site_id: Mapped[int] = mapped_column(Integer, ForeignKey('sites.id'))
