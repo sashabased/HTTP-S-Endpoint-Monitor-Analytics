@@ -1,37 +1,23 @@
 from app import http_client
 
-import urllib.parse as ups
-
 from app.models.endpointer_models import Site, Endpoint, CheckResult
 from app.schemas.endpoint_schema import SiteCreate, SiteEdit, SiteRead, EndpointRead, EndpointCreate, EndpointEdit
-from app.repository.endpoint_repo import EndpointRepository
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-class EndpointService():
+class EndpointRepository():
 
     @staticmethod
-    async def post_user_url(user_input: SiteCreate, session: AsyncSession):
-        try:
-            url_data = ups.urlparse(user_input.url)
-            if url_data.path in ('', '/'):
-                # обрежу слеш юрла потомушто потом ендпоинт с слешем прилетит распаршенный
-                user_input.url = user_input.url.strip('/')
-                response = await EndpointRepository.add_site(user_input, session)
+    async def add_site(user_input: SiteCreate, session: AsyncSession):
+            new_url = Site(
+                base_url=user_input.url,
+                name=user_input.name
+            )
 
-                await session.commit()
-                await session.refresh(response)
+            session.add(new_url)
 
-                return response
-            else:
-                return 'url/endp'
-        
-        except Exception as e:
-            await session.rollback()
-            print(f'Error raised at func: post_user_url -> {str(e)}')
-
-            return None
+            return new_url
         
     @staticmethod
     async def get_url_by_id(site_id: int, session: AsyncSession):
