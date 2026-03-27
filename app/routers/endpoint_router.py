@@ -3,13 +3,13 @@ from fastapi import APIRouter, Request, Depends, HTTPException
 from app import http_client
 from app.services.endpoint_service import check_endpoint
 from app.database import db
-from app.core.exceptions import DatabaseError, InvalidUrlPathError
+from app.core.exceptions import DatabaseError, DatabaseDeleteError, InvalidUrlPathError, InvalidUrlDomainError, InvalidUrlSchemeError
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.services.endpoint_service import UrlService
-from app.schemas.endpoint_schema import SiteCreate, SiteEdit, SiteRead, EndpointCreate, EndpointEdit, EndpointRead
+from app.schemas.endpoint_schema import SiteCreate, SiteDelete
 
 endpointer = APIRouter(
     prefix='/endpointer',
@@ -23,16 +23,39 @@ async def post_user_url(user_input: SiteCreate, session = Depends(db)):
     try:
         response = await service.validate_user_url(user_input)
         return response
+    
     except InvalidUrlPathError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    
+    except InvalidUrlSchemeError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
+    except InvalidUrlDomainError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
     except DatabaseError:
         raise HTTPException(status_code=500, detail='Internal server error')
 
-@endpointer.get("/sites")
+@endpointer.get("/get-urls")
 async def get_all_urls(session = Depends(db)):
     response = await UrlService(session).validate_all_urls()
     
     return response
+
+@endpointer.delete("/delete/{id}", status_code=200)
+async def delete_url_by_id(user_input: SiteDelete, session = Depends(db)):
+    service = UrlService(session)
+    
+    try:
+        response = await service.check_to_del_url(user_input)
+
+        if response is None:
+            raise HTTPException(status_code=404, detail="URL with this id dont exists")
+
+        return response
+    
+    except DatabaseDeleteError as e:
+        raise HTTPException(500, detail='Server error during deletion')
     
 # @endpointer.get("/sites/{id}")
 # async def get_url_by_id(site_id: int, session: AsyncSession = Depends(db)):

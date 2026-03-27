@@ -14,6 +14,9 @@ class SiteRead(SiteCreate):
 class SiteEdit(BaseModel):
     name: Optional[str] = Field(max_length=150)
 
+class SiteDelete(BaseModel):
+    id: int
+
 # валидация для эндпоинтов, обязательная
 
 class EndpointCreate(BaseModel):

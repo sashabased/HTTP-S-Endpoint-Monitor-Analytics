@@ -1,9 +1,14 @@
-url = "http://git.com"
-endpoint = "me/user"
+import urllib.parse as prs
 
-val_endp = endpoint.strip('/')
-print(val_endp)
-val_endp = ('/' + val_endp)
-print(val_endp)
+url = str(input())
 
-print(url + val_endp)
+url_validation = prs.urlparse(url)
+print(url_validation)
+if url_validation.scheme not in ('http', 'https'):
+    print('Not valid url!')
+else:
+    if url_validation.path in ('', '/'):
+        response = url.strip('/') 
+        print("this is correct url ->", response)
+    else:
+        print("URL was sended with endpoint")
