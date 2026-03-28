@@ -21,3 +21,7 @@ class DatabaseError(Exception):
 class DatabaseDeleteError(Exception):
     "Error was raised on delete object"
     pass
+
+class DatabaseGetError(Exception):
+    "Error was raised during get object"
+    pass

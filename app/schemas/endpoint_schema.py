@@ -4,7 +4,7 @@ from typing import Optional
 from datetime import datetime
 
 class SiteCreate(BaseModel):
-    url: str = Field(max_length=150)
+    base_url: str = Field(max_length=150)
     name: str = Field(max_length=150)
 
 class SiteRead(SiteCreate):
@@ -14,8 +14,8 @@ class SiteRead(SiteCreate):
 class SiteEdit(BaseModel):
     name: Optional[str] = Field(max_length=150)
 
-class SiteDelete(BaseModel):
-    id: int
+class SiteIdToDo(BaseModel):
+    id: int 
 
 # валидация для эндпоинтов, обязательная
 
