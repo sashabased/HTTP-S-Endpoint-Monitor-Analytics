@@ -10,7 +10,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
 from app.services.endpoint_service import UrlService
-from app.schemas.endpoint_schema import SiteCreate, SiteRead, EndpointCreate
+from app.schemas.endpoint_schema import SiteCreate, SiteRead, EndpointCreate, SiteEdit, SiteReadAdvanced, EndpointEdit, EndpointRead
+
+from typing import List
 
 endpointer = APIRouter(
     prefix='/endpointer',
@@ -39,23 +41,26 @@ async def post_user_url(user_input: SiteCreate, session = Depends(db)):
     except DatabaseError:
         raise HTTPException(status_code=500, detail='Internal server error')
 
-@endpointer.get("/urls", response_model=list[SiteRead])
+@endpointer.get("/urls", response_model=List[SiteRead])
 async def get_all_urls(session = Depends(db)):
     response = await UrlService(session).validate_all_urls()
     
     return response
-
-@endpointer.get("/urls/{url_id}", response_model=SiteRead)
-async def get_url_by_id(url_id: int, session = Depends(db)):
+    
+@endpointer.patch("/urls/{url_id}", response_model=SiteRead)
+async def patch_url_by_id(url_id: int, user_input: SiteEdit, session = Depends(db)):
     service = UrlService(session)
 
     try:
-        response = await service.validate_url(url_id)
+        response = await service.check_to_edit_url(url_id, user_input)
 
         return response
     
-    except DatabaseGetError:
+    except InvalidUrlPathError:
         raise HTTPException(status_code=404, detail="URL with this Id dont exist")
+    
+    except DatabaseError:
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 @endpointer.delete("/urls/{url_id}", status_code=200)
 async def delete_url_by_id(url_id: int, session = Depends(db)):
@@ -88,10 +93,40 @@ async def add_endp_to_url(
         return response
     
     except InvalidUrlPathError:
-        raise HTTPException(status_code=404, detail="URL with this id dont exist")
+        raise HTTPException(status_code=400, detail="URL with this id dont exist")
     
     except DatabaseError:
-        raise HTTPException(status_code=404, detail="URL alredy have this endpoint")
+        raise HTTPException(status_code=400, detail="URL alredy have this endpoint")
+    
+@endpointer.patch("/endpoints/{endp_id}", response_model=EndpointRead)
+async def patch_endp_by_id(endp_id: int, user_input: EndpointEdit, session = Depends(db)):
+    service = UrlService(session)
+
+    try:
+        response = await service.check_to_patch_endp(endp_id, user_input)
+
+        return response
+    
+    except InvalidUrlPathError:
+        raise HTTPException(status_code=404, detail="Endpoint with this Id dont exist")
+    
+    except DatabaseError:
+        raise HTTPException(status_code=400, detail="You cant add same endpoint to same URL")  
+    
+# ЭТОТ РОУТ НЕ ОТНОСИТСЯ НИ К КАКИМ ИЗ ДВУХ ВАРИАНТОВ ОН ОБЩИЙ
+
+@endpointer.get("/urls/{url_id}", response_model=SiteReadAdvanced)
+async def get_url_by_id(url_id: int, session = Depends(db)):
+    service = UrlService(session)
+
+    try:
+        response = await service.validate_url(url_id)
+
+        return response
+    
+    except DatabaseGetError:
+        raise HTTPException(status_code=404, detail="URL with this Id dont exist")
+    
 
 # @endpointer.get("/start-check")
 # async def check_url(request: Request, url: str):

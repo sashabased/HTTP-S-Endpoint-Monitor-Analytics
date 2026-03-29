@@ -4,7 +4,7 @@ import urllib.parse as ups
 
 from app.core.exceptions import DatabaseGetError, InvalidUrlPathError, DatabaseError, InvalidUrlSchemeError, InvalidUrlDomainError, DatabaseDeleteError
 from app.models.endpointer_models import Site, Endpoint, CheckResult
-from app.schemas.endpoint_schema import SiteCreate, EndpointCreate
+from app.schemas.endpoint_schema import SiteCreate, EndpointCreate, SiteEdit, EndpointEdit
 from app.repository.endpoint_repo import UrlRepository
 
 from sqlalchemy.exc import IntegrityError
@@ -64,12 +64,30 @@ class UrlService():
         
         return respone  
     
+    async def check_to_edit_url(self, url_id: int, user_input: SiteEdit):
+       
+        response = await UrlRepository(self.session).edit_url(url_id, user_input)
+
+        if not response or response is None:
+            raise InvalidUrlPathError("URL with this id dont exist")
+        
+        try:
+            await self.session.commit()
+            await self.session.refresh(response)
+
+            return response
+        
+        except Exception as e:
+            await self.session.rollback()
+
+            raise DatabaseError
+    
     async def check_to_del_url(self, url_id: int):
 
         try:
             response = await UrlRepository(self.session).delete_url(url_id)
 
-            if not response:
+            if not response or response is None:
                 return None
             
             await self.session.commit()
@@ -83,6 +101,11 @@ class UrlService():
     # ТУТ ПО ЭНДПОИНТАМ ЮРЛОВ!!!   
 
     async def validate_endp_to_post(self, url_id: int, user_input: EndpointCreate):
+        
+        edit_path = user_input.path
+        edit_path = "/" + edit_path.strip("/")
+        user_input.path = edit_path
+
         try:
             response = await UrlRepository(self.session).add_endp_to_url(url_id, user_input)
 
@@ -98,6 +121,29 @@ class UrlService():
             await self.session.rollback()
 
             raise DatabaseError("URL already have this endpoint")
+        
+    async def check_to_patch_endp(self, endp_id: int, user_input: EndpointEdit):
+
+        validated_path = user_input.path.strip('/')
+        user_input.path = '/' + validated_path
+
+        response = await UrlRepository(self.session).edit_endp(endp_id, user_input)
+
+        if not response or response is None:
+            raise InvalidUrlPathError("Endpoint with this id dont exist")
+            
+        try:  
+            await self.session.commit()
+            await self.session.refresh(response)
+
+            return response
+        
+        except Exception as e:
+            await self.session.rollback()
+
+            raise DatabaseError()
+
+
 
 async def check_endpoint(url):
     response = await http_client.client.get(url)

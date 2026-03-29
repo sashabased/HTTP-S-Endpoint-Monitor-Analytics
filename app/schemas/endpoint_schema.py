@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 class SiteCreate(BaseModel):
@@ -31,6 +31,13 @@ class EndpointCreate(BaseModel):
 class EndpointRead(EndpointCreate):
     id: int
     site_id: int
+
+########################################
+class SiteReadAdvanced(SiteCreate):
+    created_at: datetime
+    id: int
+    endpoints: List[EndpointRead]
+########################################
 
 class EndpointEdit(BaseModel):
     path: Optional[str] = Field(max_length=150)
