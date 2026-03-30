@@ -9,6 +9,12 @@ class InvalidUrlSchemeError(Exception):
 
 class InvalidUrlDomainError(Exception):
     "Error, URL have incorrect or None netloc"
+    pass
+
+
+# endpoint errors
+class EndpointIdError(Exception):
+    "Error, Endpoint with this id dont exist"
 
 
 # db general

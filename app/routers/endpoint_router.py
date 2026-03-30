@@ -3,7 +3,7 @@ from fastapi import APIRouter, Request, Depends, HTTPException
 from app import http_client
 from app.services.endpoint_service import check_endpoint
 from app.database import db
-from app.core.exceptions import DatabaseGetError, DatabaseError, DatabaseDeleteError, InvalidUrlPathError, InvalidUrlDomainError, InvalidUrlSchemeError
+from app.core.exceptions import DatabaseGetError, DatabaseError, EndpointIdError, DatabaseDeleteError, InvalidUrlPathError, InvalidUrlDomainError, InvalidUrlSchemeError
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -112,6 +112,33 @@ async def patch_endp_by_id(endp_id: int, user_input: EndpointEdit, session = Dep
     
     except DatabaseError:
         raise HTTPException(status_code=400, detail="You cant add same endpoint to same URL")  
+    
+@endpointer.delete("/endpoints/{endp_id}", status_code=200)
+async def delete_endp_by_id(endp_id: int, session = Depends(db)):
+    service = UrlService(session)
+
+    try:
+        response = await service.check_to_del_endp(endp_id)
+
+        return response
+    
+    except DatabaseDeleteError:
+        raise HTTPException(status_code=404, detail="Endpoint with this Id dont exist or already deleted")
+    
+    except DatabaseError:
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@endpointer.get("/endpoints/{endp_id}", response_model=EndpointRead)
+async def get_endp_by_id(endp_id: int, session = Depends(db)):
+    service = UrlService(session)
+
+    try:
+        response = await service.validate_endp_get(endp_id)
+
+        return response
+    
+    except EndpointIdError:
+        raise HTTPException(status_code=400, detail="Endpoint with this Id dont exist")
     
 # ЭТОТ РОУТ НЕ ОТНОСИТСЯ НИ К КАКИМ ИЗ ДВУХ ВАРИАНТОВ ОН ОБЩИЙ
 

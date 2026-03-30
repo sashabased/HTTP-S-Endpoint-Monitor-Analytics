@@ -111,3 +111,29 @@ class UrlRepository():
             return obj_to_edit
         
         return None
+    
+    async def delete_endp(self, endp_id: int):
+
+        obj_to_del = await self.session.scalar(
+            select(Endpoint)
+            .where(Endpoint.id == endp_id)
+        )
+
+        if obj_to_del:
+            await self.session.delete(obj_to_del)
+            return True
+        
+        return False
+    
+    async def get_endp(self, endp_id: int):
+
+        obj = await self.session.scalar(
+            select(Endpoint)
+            .where(Endpoint.id == endp_id)
+        )
+
+        if obj:
+
+            return obj
+        
+        return None

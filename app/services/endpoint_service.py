@@ -2,7 +2,7 @@ from app import http_client
 
 import urllib.parse as ups
 
-from app.core.exceptions import DatabaseGetError, InvalidUrlPathError, DatabaseError, InvalidUrlSchemeError, InvalidUrlDomainError, DatabaseDeleteError
+from app.core.exceptions import EndpointIdError, DatabaseGetError, InvalidUrlPathError, DatabaseError, InvalidUrlSchemeError, InvalidUrlDomainError, DatabaseDeleteError
 from app.models.endpointer_models import Site, Endpoint, CheckResult
 from app.schemas.endpoint_schema import SiteCreate, EndpointCreate, SiteEdit, EndpointEdit
 from app.repository.endpoint_repo import UrlRepository
@@ -143,7 +143,32 @@ class UrlService():
 
             raise DatabaseError()
 
+    async def check_to_del_endp(self, endp_id: int):
 
+        response = await UrlRepository(self.session).delete_endp(endp_id)
+
+        if response is False:
+            raise DatabaseDeleteError("Endpoint already deleted or dont exist")
+
+        try:
+            await self.session.commit()
+            return {"status": "deleted"}
+
+        except Exception as e:
+            await self.session.rollback()
+
+            raise DatabaseError()
+        
+    async def validate_endp_get(self, endp_id: int):
+
+        response = await UrlRepository(self.session).get_endp(endp_id)
+
+        if not response or response is None:
+            raise EndpointIdError("Endpoint with this Id not found")
+        
+        return response
+        
+            
 
 async def check_endpoint(url):
     response = await http_client.client.get(url)
