@@ -9,6 +9,7 @@ import asyncio
 import sys
 
 from app.routers.endpoint_router import endpointer
+from app.routers.endp_monitoring_router import endp_monitor
 
 from contextlib import asynccontextmanager
 
@@ -35,6 +36,7 @@ async def get_loop_type():
     return {"loop_type": str(asyncio.get_event_loop_policy())}
 
 app.include_router(endpointer)
+app.include_router(endp_monitor)
 
 if __name__ == "__main__":
 

@@ -21,8 +21,6 @@ class Site(Base):
 
     endpoints: Mapped[List["Endpoint"]] = relationship(back_populates='site')
 
-# ДОБАВИТЬ УДАЛЕНИЕ НА УДАЛЕНИИ! ON DELETE CASCADE!
-
 class Endpoint(Base):
     __tablename__ = "endpoints"
 
@@ -32,6 +30,8 @@ class Endpoint(Base):
     path: Mapped[str]
     sampling_interval: Mapped[int] = mapped_column(nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean)
+    method: Mapped[str] 
+    timeout: Mapped[float]
 
     site_id: Mapped[int] = mapped_column(Integer, ForeignKey('sites.id'))
     site: Mapped["Site"] = relationship(back_populates='endpoints')
@@ -43,6 +43,7 @@ class CheckResult(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     status_code: Mapped[int]
+    is_available: Mapped[bool]
     response_time: Mapped[float]
     error_details: Mapped[str] = mapped_column(nullable=True)
     timestamp: Mapped[datetime] = mapped_column(

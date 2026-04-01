@@ -19,7 +19,7 @@ class UrlService():
 
     async def validate_user_url(self, user_input: SiteCreate):
         
-            url_to_parse = user_input.url.strip().lower()
+            url_to_parse = user_input.base_url.strip().lower()
 
             if "://" not in url_to_parse:
                 url_to_parse = f"https://{url_to_parse}"
@@ -35,7 +35,7 @@ class UrlService():
             if url_data.path not in ('', '/'):
                 raise InvalidUrlPathError("URL path must be empty or '/'")
 
-            user_input.url = url_to_parse.rstrip('/')
+            user_input.base_url = url_to_parse.rstrip('/')
 
             try:
                 response = await UrlRepository(self.session).add_validated_url(user_input)
@@ -117,8 +117,9 @@ class UrlService():
 
             return response
         
-        except IntegrityError:
+        except IntegrityError as e:
             await self.session.rollback()
+            print(e)
 
             raise DatabaseError("URL already have this endpoint")
         

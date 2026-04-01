@@ -19,7 +19,7 @@ class UrlRepository():
     async def add_validated_url(self, user_input: SiteCreate):
 
         new_url = Site(
-            base_url=user_input.url,
+            base_url=user_input.base_url,
             name=user_input.name
         )
 
@@ -87,6 +87,8 @@ class UrlRepository():
                 path = user_input.path,
                 sampling_interval = user_input.sampling_interval,
                 is_active = user_input.is_active,
+                method = user_input.method,
+                timeout = user_input.timeout,
                 site_id = url_id
             )
 
