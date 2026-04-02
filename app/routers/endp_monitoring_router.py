@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
-from app.services.endpoint_service import UrlService
+from app.services.endp_monitoring_service import MonitoringSerivce
 from app.schemas.endpoint_schema import SiteCreate, SiteRead, EndpointCreate, SiteEdit, SiteReadAdvanced, EndpointEdit, EndpointRead
 
 from typing import List
@@ -21,8 +21,17 @@ endp_monitor = APIRouter(
     tags=['checks endpoints of choosen url']
 )
 
-@endp_monitor.get("/urls/{url_id}/endpoints/stats")
-async def get_all_active_endp(url_id: int, session = Depends(db)):
-    response =  await CheckResultRepository(session).get_active_endpoints_with_sites(url_id)
+@endp_monitor.get("/urls/endpoints/stats")
+async def get_all_active_endp(session = Depends(db)):
+    service = MonitoringSerivce(session)
 
-    return response
+    try:
+        response = await service.check_to_ping_endps()
+
+        return response
+    
+    except DatabaseGetError:
+        raise HTTPException(status_code=404, detail="URL active endpoints not found or URL dont exist")
+    
+    except DatabaseError:
+        raise HTTPException(status_code=500, detail="Internal server error")
