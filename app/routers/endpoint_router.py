@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request, Depends, HTTPException
 
 from app import http_client
 from app.services.endpoint_service import check_endpoint
-from app.database import db
+from app.dependencies.db import get_db
 from app.core.exceptions import DatabaseGetError, DatabaseError, EndpointIdError, DatabaseDeleteError, InvalidUrlPathError, InvalidUrlDomainError, InvalidUrlSchemeError
 
 from sqlalchemy import select
@@ -22,7 +22,7 @@ endpointer = APIRouter(
 # ТУТ ПО ЮРЛАМ!!!
 
 @endpointer.post("/urls", response_model=SiteRead)
-async def post_user_url(user_input: SiteCreate, session = Depends(db)):
+async def post_user_url(user_input: SiteCreate, session = Depends(get_db)):
     service = UrlService(session)
 
     try:
@@ -42,13 +42,13 @@ async def post_user_url(user_input: SiteCreate, session = Depends(db)):
         raise HTTPException(status_code=500, detail='Internal server error')
 
 @endpointer.get("/urls", response_model=List[SiteRead])
-async def get_all_urls(session = Depends(db)):
+async def get_all_urls(session = Depends(get_db)):
     response = await UrlService(session).validate_all_urls()
     
     return response
     
 @endpointer.patch("/urls/{url_id}", response_model=SiteRead)
-async def patch_url_by_id(url_id: int, user_input: SiteEdit, session = Depends(db)):
+async def patch_url_by_id(url_id: int, user_input: SiteEdit, session = Depends(get_db)):
     service = UrlService(session)
 
     try:
@@ -63,7 +63,7 @@ async def patch_url_by_id(url_id: int, user_input: SiteEdit, session = Depends(d
         raise HTTPException(status_code=500, detail="Internal server error")
 
 @endpointer.delete("/urls/{url_id}", status_code=200)
-async def delete_url_by_id(url_id: int, session = Depends(db)):
+async def delete_url_by_id(url_id: int, session = Depends(get_db)):
     service = UrlService(session)
     
     try:
@@ -83,7 +83,7 @@ async def delete_url_by_id(url_id: int, session = Depends(db)):
 async def add_endp_to_url(
     url_id: int, 
     user_input: EndpointCreate, 
-    session = Depends(db)
+    session = Depends(get_db)
 ):
     service = UrlService(session)
 
@@ -99,7 +99,7 @@ async def add_endp_to_url(
         raise HTTPException(status_code=400, detail="URL alredy have this endpoint")
     
 @endpointer.patch("/endpoints/{endp_id}", response_model=EndpointRead)
-async def patch_endp_by_id(endp_id: int, user_input: EndpointEdit, session = Depends(db)):
+async def patch_endp_by_id(endp_id: int, user_input: EndpointEdit, session = Depends(get_db)):
     service = UrlService(session)
 
     try:
@@ -114,7 +114,7 @@ async def patch_endp_by_id(endp_id: int, user_input: EndpointEdit, session = Dep
         raise HTTPException(status_code=400, detail="You cant add same endpoint to same URL")  
     
 @endpointer.delete("/endpoints/{endp_id}", status_code=200)
-async def delete_endp_by_id(endp_id: int, session = Depends(db)):
+async def delete_endp_by_id(endp_id: int, session = Depends(get_db)):
     service = UrlService(session)
 
     try:
@@ -129,7 +129,7 @@ async def delete_endp_by_id(endp_id: int, session = Depends(db)):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 @endpointer.get("/endpoints/{endp_id}", response_model=EndpointRead)
-async def get_endp_by_id(endp_id: int, session = Depends(db)):
+async def get_endp_by_id(endp_id: int, session = Depends(get_db)):
     service = UrlService(session)
 
     try:
@@ -143,7 +143,7 @@ async def get_endp_by_id(endp_id: int, session = Depends(db)):
 # ЭТОТ РОУТ НЕ ОТНОСИТСЯ НИ К КАКИМ ИЗ ДВУХ ВАРИАНТОВ ОН ОБЩИЙ
 
 @endpointer.get("/urls/{url_id}", response_model=SiteReadAdvanced)
-async def get_url_by_id(url_id: int, session = Depends(db)):
+async def get_url_by_id(url_id: int, session = Depends(get_db)):
     service = UrlService(session)
 
     try:

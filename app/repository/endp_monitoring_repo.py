@@ -28,3 +28,12 @@ class CheckResultRepository():
     async def bulk_save(self, results: list[CheckResult]):
 
         self.session.add_all(results)
+        
+        try:
+            await self.session.commit()
+        
+        except:
+            await self.session.rollback()
+            raise
+        
+        return results

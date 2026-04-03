@@ -14,8 +14,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 class MonitoringSerivce():
-    def __init__(self, session: AsyncSession):
-        self.session = session
+    def __init__(self, repo: CheckResultRepository):
+        self.repo = repo
 
     async def _do_ping(self, url: str, method: str, timeout: float):
         
@@ -34,7 +34,6 @@ class MonitoringSerivce():
                 "is_available": 200 <= response.status_code < 400,
                 "error_details": None
             }
-        
         except hx.RequestError as exc:
             return {
                 "status_code": 0,
@@ -42,7 +41,6 @@ class MonitoringSerivce():
                 "is_available": False,
                 "error_details": f"Network error: {str(exc)}"
             }
-        
         except Exception as e:
             return {
                 "status_code": 0,
@@ -53,10 +51,8 @@ class MonitoringSerivce():
 
     async def check_to_ping_endps(self):
         
-        sites = await (CheckResultRepository(self.session)
-                            .get_active_endpoints_with_sites()
-        )
-
+        sites = await self.repo.get_active_endpoints_with_sites()
+        
         if sites is None or not sites:
             raise DatabaseGetError("URL have no active endpoints")
         
@@ -76,14 +72,9 @@ class MonitoringSerivce():
 
                 all_results.append(result_model)
 
-        response = await CheckResultRepository(self.session).bulk_save(all_results)
-
         try:
-            await self.session.commit()
-
-            return response
-
+            await self.repo.bulk_save(all_results)
         except Exception as e:
-            await self.session.rollback()
+            raise DatabaseError("Error was raised on server side")
 
-            print(e)
+        return all_results
