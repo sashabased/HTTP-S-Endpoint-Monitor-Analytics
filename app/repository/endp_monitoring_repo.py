@@ -31,9 +31,10 @@ class CheckResultRepository():
         
         try:
             await self.session.commit()
-        
-        except:
+
+            return results
+
+        except Exception:
             await self.session.rollback()
+            
             raise
-        
-        return results

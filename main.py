@@ -8,7 +8,8 @@ import httpx
 import asyncio
 import sys
 
-from app.routers.endpoint_router import endpointer
+#from app.routers.endpoints_router import endpoints
+from app.routers.sites_router import sites
 from app.routers.endp_monitoring_router import endp_monitor
 
 from contextlib import asynccontextmanager
@@ -35,7 +36,8 @@ app = FastAPI(title='Dashboard HTTP tools', lifespan=lifespan)
 async def get_loop_type():
     return {"loop_type": str(asyncio.get_event_loop_policy())}
 
-app.include_router(endpointer)
+#app.include_router(endpoints)
+app.include_router(sites)
 app.include_router(endp_monitor)
 
 if __name__ == "__main__":

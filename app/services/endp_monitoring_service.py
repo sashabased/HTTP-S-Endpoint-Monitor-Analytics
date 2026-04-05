@@ -2,16 +2,9 @@ from app import http_client
 
 import httpx as hx
 
-import urllib.parse as ups
-
-from app.core.exceptions import EndpointIdError, DatabaseGetError, InvalidUrlPathError, DatabaseError, InvalidUrlSchemeError, InvalidUrlDomainError, DatabaseDeleteError
-from app.models.endpointer_models import Site, Endpoint, CheckResult
-from app.schemas.endpoint_schema import SiteCreate, EndpointCreate, SiteEdit, EndpointEdit
+from app.core.exceptions import NotFoundError, AlreadyExistsError, DatabaseError, ValidationError
+from app.models.endpointer_models import CheckResult
 from app.repository.endp_monitoring_repo import CheckResultRepository
-
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
 class MonitoringSerivce():
     def __init__(self, repo: CheckResultRepository):
@@ -53,8 +46,8 @@ class MonitoringSerivce():
         
         sites = await self.repo.get_active_endpoints_with_sites()
         
-        if sites is None or not sites:
-            raise DatabaseGetError("URL have no active endpoints")
+        if not sites:
+            raise NotFoundError("Endpoint not found")
         
         all_results = []
 
@@ -71,10 +64,7 @@ class MonitoringSerivce():
                 )
 
                 all_results.append(result_model)
-
-        try:
-            await self.repo.bulk_save(all_results)
-        except Exception as e:
-            raise DatabaseError("Error was raised on server side")
+        
+        await self.repo.bulk_save(all_results)
 
         return all_results

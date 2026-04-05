@@ -1,0 +1,69 @@
+from fastapi import APIRouter, Depends, HTTPException 
+
+from app.core.exceptions import DatabaseError, NotFoundError, ValidationError
+from app.services.sites_service import SiteService
+from app.schemas.endpoint_schema import SiteCreate, SiteRead, SiteEdit, SiteReadAdvanced
+from app.dependencies.service import get_site_service
+
+from typing import List
+
+
+sites = APIRouter(
+    prefix='/sites',
+    tags=['url site checker']
+    )
+
+
+@sites.post("/", response_model=SiteRead)
+async def post_user_url(user_input: SiteCreate, service: SiteService = Depends(get_site_service)):
+
+    try:
+        response = await service.validate_user_url(user_input)
+        return response
+    
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@sites.get("/", response_model=List[SiteRead])
+async def get_all_urls(service: SiteService = Depends(get_site_service)):
+    
+    response = await service.validate_all_urls()
+    
+    return response
+
+
+@sites.patch("/{url_id}", response_model=SiteRead)
+async def patch_url_by_id(url_id: int, user_input: SiteEdit, service: SiteService = Depends(get_site_service)):
+
+    try:
+        response = await service.check_to_edit_url(url_id, user_input)
+
+        return response
+    
+    except NotFoundError:
+        raise HTTPException(status_code=404, detail="URL not found")
+    
+
+@sites.delete("/{url_id}", status_code=200)
+async def delete_url_by_id(url_id: int, service: SiteService = Depends(get_site_service)):
+
+    try:
+        response = await service.check_to_del_url(url_id)
+
+        return response
+    
+    except NotFoundError:
+        raise HTTPException(404, detail='URL not found')
+
+
+@sites.get("/{url_id}", response_model=SiteReadAdvanced)
+async def get_url_by_id(url_id: int, service: SiteService = Depends(get_site_service)):
+
+    try:
+        response = await service.validate_url(url_id)
+
+        return response
+    
+    except NotFoundError:
+        raise HTTPException(status_code=404, detail="URL not found")

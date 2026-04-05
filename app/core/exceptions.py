@@ -1,33 +1,26 @@
-# url errors
-class InvalidUrlPathError(Exception):
-    "Error, URL path was sended with Endpoit or Null"
-    pass
-
-class InvalidUrlSchemeError(Exception):
-    "Error, URL scheme was incorrect or None"
-    pass
-
-class InvalidUrlDomainError(Exception):
-    "Error, URL have incorrect or None netloc"
+# base
+class AppError(Exception):
+    """Базовое приложение исключение"""
     pass
 
 
-# endpoint errors
-class EndpointIdError(Exception):
-    "Error, Endpoint with this id dont exist"
+# 4 ключевых категории
 
-
-# db general
-class DatabaseError(Exception):
-    "General database error exception"
+class NotFoundError(AppError):
+    "Сущность не найдена"
     pass
 
 
-# db special
-class DatabaseDeleteError(Exception):
-    "Error was raised on delete object"
+class ValidationError(AppError):
+    "Ошибка валидации входных данных"
     pass
 
-class DatabaseGetError(Exception):
-    "Error was raised during get object"
+
+class AlreadyExistsError(AppError):
+    "Конфликт уникальности / уже существует"
+    pass
+
+
+class DatabaseError(AppError):
+    "Любая непредвиденная ошибка БД"
     pass

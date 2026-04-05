@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Request, Depends, HTTPException 
 
-from app.core.exceptions import DatabaseGetError, DatabaseError
+from app.core.exceptions import NotFoundError
 from app.services.endp_monitoring_service import MonitoringSerivce
 from app.repository.endp_monitoring_repo import CheckResultRepository
+
 from app.dependencies.service import get_monitoring_service
 
 from typing import List
@@ -19,5 +20,5 @@ async def get_all_active_endp(service: MonitoringSerivce = Depends(get_monitorin
 
         return response
     
-    except DatabaseError:
-        raise HTTPException(status_code=500, detail="Internal server error")
+    except NotFoundError:
+        raise HTTPException(status_code=404, detail="Active endpoints not found")
