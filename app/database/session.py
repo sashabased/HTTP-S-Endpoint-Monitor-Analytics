@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine, AsyncSession
 
-url = "postgresql+asyncpg://postgres:19762003@localhost/HTTPDashboardTools"
+from connection_url import url
 
 engine = create_async_engine(url)
 

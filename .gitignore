@@ -39,3 +39,4 @@ htmlcov/
 
 # secrets
 .env
+connection_url
