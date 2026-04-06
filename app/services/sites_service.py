@@ -9,7 +9,7 @@ class SiteService():
         self.repo = repo
 
 
-    async def validate_user_url(self, user_input: SiteCreate):
+    async def create_url(self, user_input: SiteCreate):
         
         url_to_parse = user_input.base_url.strip().lower()
 
@@ -29,56 +29,41 @@ class SiteService():
 
         user_input.base_url = url_to_parse.rstrip('/')
 
-        response = await self.repo.add_validated_url(user_input)  
+        response = await self.repo.add_url(user_input)  
             
         return response
         
 
-    async def validate_all_urls(self):
+    async def get_urls(self):
     
-        response = await self.repo.get_all_urls()
+        response = await self.repo.select_urls()
 
         return response
     
 
-    async def validate_url(self, url_id: int):
+    async def get_url(self, url_id: int):
 
-        respone = await self.repo.get_one_url(url_id)
+        response = await self.repo.select_url(url_id)
 
-        if not respone:
-            raise NotFoundError("URL not found")
-        
-        return respone  
+        return response  
     
 
-    async def check_to_edit_url(self, url_id: int, user_input: SiteEdit):
+    async def update_url(self, url_id: int, user_input: SiteEdit):
        
         response = await self.repo.edit_url(url_id, user_input)
 
-        if not response:
-            raise NotFoundError("URL not found")
-        
         return response
     
 
-    async def check_to_del_url(self, url_id: int):
+    async def delete_url(self, url_id: int):
 
-        response = await self.repo.delete_url(url_id)
-
-        if not response:
-            raise NotFoundError("URL not found")
-            
-        return {"status": "deleted"}
+        await self.repo.drop_url(url_id)
     
 
-    async def validate_endp_to_post(self, url_id: int, user_input: EndpointCreate):
+    async def create_endpoint(self, url_id: int, user_input: EndpointCreate):
         
         user_input.path = "/" + user_input.path.strip("/")
 
-        response = await self.repo.add_endp_to_url(url_id, user_input)
+        response = await self.repo.add_endpoint(url_id, user_input)
 
-        if not response:
-            raise NotFoundError("URL not found")
-            
         return response
-        

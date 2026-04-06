@@ -9,34 +9,19 @@ class EndpointService():
         self.repo = repo
 
         
-    async def check_to_patch_endp(self, endp_id: int, user_input: EndpointEdit):
+    async def update_endp(self, endp_id: int, user_input: EndpointEdit):
 
         validated_path = user_input.path.strip('/')
         user_input.path = '/' + validated_path
 
-        response = await self.repo.edit_endp(endp_id, user_input)
+        return await self.repo.edit_endp(endp_id, user_input)
 
-        if not response or response is None:
-            raise NotFoundError("Endpoint not found")
+
+    async def delete_endp(self, endp_id: int):
+
+        await self.repo.drop_endp(endp_id)
+
         
-        return response
+    async def get_endpoint(self, endp_id: int):
 
-
-    async def check_to_del_endp(self, endp_id: int):
-
-        response = await self.repo.delete_endp(endp_id)
-
-        if response is False:
-            raise NotFoundError("Endpoint not found")
-        
-        return {"status": "deleted"}
-      
-        
-    async def validate_endp_get(self, endp_id: int):
-
-        response = await self.repo.get_endp(endp_id)
-
-        if not response or response is None:
-            raise NotFoundError("Endpoint not found")
-        
-        return response
+        return await self.repo.select_endp(endp_id)

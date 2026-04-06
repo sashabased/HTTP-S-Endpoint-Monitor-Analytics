@@ -14,27 +14,6 @@ endpoints = APIRouter(
     )
 
 
-# ПЕРЕНЕСТИ В РОУТЫ САЙТОВ к юрлам
-
-# @endpoints.post("/urls/{url_id}/endpoints")
-# async def add_endp_to_url(
-#     url_id: int, 
-#     user_input: EndpointCreate, 
-#     service: EndpointService = Depends(get_endpoint_service)
-# ):
-
-#     try:
-#         response = await service.validate_endp_to_post(url_id, user_input)
-
-#         return response
-    
-#     except InvalidUrlPathError:
-#         raise HTTPException(status_code=400, detail="URL with this id dont exist")
-    
-#     except DatabaseError:
-#         raise HTTPException(status_code=400, detail="URL alredy have this endpoint")
-
-
 @endpoints.patch("/{endp_id}", response_model=EndpointRead)
 async def patch_endp_by_id(
     endp_id: int, 
@@ -42,34 +21,16 @@ async def patch_endp_by_id(
     service: EndpointService = Depends(get_endpoint_service)
 ):
 
-    try:
-        response = await service.check_to_patch_endp(endp_id, user_input)
+    return await service.update_endp(endp_id, user_input)
 
-        return response
-    
-    except NotFoundError:
-        raise HTTPException(status_code=404, detail="Endpoint not found")
-    
 
 @endpoints.delete("/{endp_id}", status_code=200)
 async def delete_endp_by_id(endp_id: int, service: EndpointService  = Depends(get_endpoint_service)):
 
-    try:
-        response = await service.check_to_del_endp(endp_id)
-
-        return response
-    
-    except NotFoundError:
-        raise HTTPException(status_code=404, detail="Endpoint not found")
+    return await service.delete_endp(endp_id)
     
 
 @endpoints.get("/{endp_id}", response_model=EndpointRead)
 async def get_endp_by_id(endp_id: int, service: EndpointService = Depends(get_endpoint_service)):
 
-    try:
-        response = await service.validate_endp_get(endp_id)
-
-        return response
-    
-    except NotFoundError:
-        raise HTTPException(status_code=404, detail="Endpoint not found")
+    return await service.get_endpoint(endp_id)

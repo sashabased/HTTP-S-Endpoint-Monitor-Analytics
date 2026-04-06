@@ -8,17 +8,14 @@ from app.dependencies.service import get_monitoring_service
 
 from typing import List
 
+
 endp_monitor = APIRouter(
     prefix='/endpoint_monitoring',
     tags=['checks endpoints of choosen url']
 )
 
+
 @endp_monitor.get("/urls/endpoints/stats")
 async def get_all_active_endp(service: MonitoringSerivce = Depends(get_monitoring_service)):
-    try:
-        response = await service.check_to_ping_endps()
 
-        return response
-    
-    except NotFoundError:
-        raise HTTPException(status_code=404, detail="Active endpoints not found")
+    return await service.check_to_ping_endps()

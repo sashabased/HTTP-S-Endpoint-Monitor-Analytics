@@ -1,14 +1,13 @@
-from app import http_client
-
 from app.models.endpointer_models import Site, Endpoint, CheckResult
-from app.schemas.endpoint_schema import SiteCreate, EndpointCreate, SiteEdit, EndpointEdit
+from app.core.exceptions import DatabaseError
 
 from typing import List
 
 # from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload, selectinload, contains_eager
+from sqlalchemy.orm import contains_eager
+from sqlalchemy.exc import SQLAlchemyError
 
 class CheckResultRepository():
     def __init__(self, session: AsyncSession):
@@ -25,6 +24,7 @@ class CheckResultRepository():
 
         return active_endps.unique().all() 
     
+
     async def bulk_save(self, results: list[CheckResult]):
 
         self.session.add_all(results)
@@ -34,7 +34,8 @@ class CheckResultRepository():
 
             return results
 
-        except Exception:
+        except SQLAlchemyError as e:
             await self.session.rollback()
-            
-            raise
+            print(f"Failed to bulk save data: {e}") # вместо логгера пока что
+
+            return []

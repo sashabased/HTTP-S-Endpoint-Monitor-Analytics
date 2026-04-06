@@ -8,6 +8,7 @@ import httpx
 import asyncio
 import sys
 
+from app.core.handlers import register_exception_handler
 from app.routers.endpoints_router import endpoints
 from app.routers.sites_router import sites
 from app.routers.endp_monitoring_router import endp_monitor
@@ -31,6 +32,8 @@ async def lifespan(app: FastAPI):
     await http_client.client.aclose()
 
 app = FastAPI(title='Dashboard HTTP tools', lifespan=lifespan)
+
+register_exception_handler(app)
 
 @app.get("/")
 async def get_loop_type():

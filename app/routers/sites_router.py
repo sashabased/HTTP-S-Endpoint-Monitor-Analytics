@@ -17,18 +17,15 @@ sites = APIRouter(
 @sites.post("/", response_model=SiteRead)
 async def post_user_url(user_input: SiteCreate, service: SiteService = Depends(get_site_service)):
 
-    try:
-        response = await service.validate_user_url(user_input)
-        return response
+    response = await service.create_url(user_input)
     
-    except ValidationError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    return response
 
 
 @sites.get("/", response_model=List[SiteRead])
 async def get_all_urls(service: SiteService = Depends(get_site_service)):
     
-    response = await service.validate_all_urls()
+    response = await service.get_urls()
     
     return response
 
@@ -36,37 +33,25 @@ async def get_all_urls(service: SiteService = Depends(get_site_service)):
 @sites.patch("/{url_id}", response_model=SiteRead)
 async def patch_url_by_id(url_id: int, user_input: SiteEdit, service: SiteService = Depends(get_site_service)):
 
-    try:
-        response = await service.check_to_edit_url(url_id, user_input)
+    response = await service.update_url(url_id, user_input)
 
-        return response
-    
-    except NotFoundError:
-        raise HTTPException(status_code=404, detail="URL not found")
+    return response
     
 
 @sites.delete("/{url_id}", status_code=200)
 async def delete_url_by_id(url_id: int, service: SiteService = Depends(get_site_service)):
 
-    try:
-        response = await service.check_to_del_url(url_id)
+    await service.delete_url(url_id)
 
-        return response
-    
-    except NotFoundError:
-        raise HTTPException(404, detail='URL not found')
+    return {"status": "deleted"}
 
 
 @sites.get("/{url_id}", response_model=SiteReadAdvanced)
 async def get_url_by_id(url_id: int, service: SiteService = Depends(get_site_service)):
 
-    try:
-        response = await service.validate_url(url_id)
+    response = await service.get_url(url_id)
 
-        return response
-    
-    except NotFoundError:
-        raise HTTPException(status_code=404, detail="URL not found")
+    return response
 
 
 @sites.post("/{url_id}/endpoints")
@@ -76,14 +61,6 @@ async def add_endp_to_url(
     service: SiteService = Depends(get_site_service)
 ):
 
-    try:
-        response = await service.validate_endp_to_post(url_id, user_input)
+    response = await service.create_endpoint(url_id, user_input)
 
-        return response
-    
-    except NotFoundError:
-        raise HTTPException(status_code=404, detail="URL not found")
-    
-    except AlreadyExistsError:
-        raise HTTPException(status_code=409, detail="Endpoint already exists")
-    
+    return response

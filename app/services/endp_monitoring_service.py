@@ -47,8 +47,9 @@ class MonitoringSerivce():
         sites = await self.repo.get_active_endpoints_with_sites()
         
         if not sites:
-            raise NotFoundError("Endpoint not found")
-        
+            print(f"No active endpoints found")
+            return []
+
         all_results = []
 
         for site in sites:
