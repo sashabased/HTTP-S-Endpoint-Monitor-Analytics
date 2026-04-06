@@ -1,12 +1,13 @@
 import urllib.parse as ups
 
-from app.core.exceptions import DatabaseError, NotFoundError, ValidationError
-from app.schemas.endpoint_schema import SiteCreate, SiteEdit
+from app.core.exceptions import NotFoundError, ValidationError
+from app.schemas.endpoint_schema import SiteCreate, SiteEdit, EndpointCreate
 from app.repository.sites_repo import SiteRepository
 
 class SiteService():
     def __init__(self, repo: SiteRepository):
         self.repo = repo
+
 
     async def validate_user_url(self, user_input: SiteCreate):
         
@@ -32,12 +33,14 @@ class SiteService():
             
         return response
         
+
     async def validate_all_urls(self):
     
         response = await self.repo.get_all_urls()
 
         return response
     
+
     async def validate_url(self, url_id: int):
 
         respone = await self.repo.get_one_url(url_id)
@@ -47,6 +50,7 @@ class SiteService():
         
         return respone  
     
+
     async def check_to_edit_url(self, url_id: int, user_input: SiteEdit):
        
         response = await self.repo.edit_url(url_id, user_input)
@@ -56,6 +60,7 @@ class SiteService():
         
         return response
     
+
     async def check_to_del_url(self, url_id: int):
 
         response = await self.repo.delete_url(url_id)
@@ -64,3 +69,16 @@ class SiteService():
             raise NotFoundError("URL not found")
             
         return {"status": "deleted"}
+    
+
+    async def validate_endp_to_post(self, url_id: int, user_input: EndpointCreate):
+        
+        user_input.path = "/" + user_input.path.strip("/")
+
+        response = await self.repo.add_endp_to_url(url_id, user_input)
+
+        if not response:
+            raise NotFoundError("URL not found")
+            
+        return response
+        

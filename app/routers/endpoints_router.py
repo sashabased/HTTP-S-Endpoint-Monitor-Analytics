@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException 
 
-from app.core.exceptions import AlreadyExistsError, NotFoundError, ValidationError
+from app.core.exceptions import NotFoundError
 from app.dependencies.service import get_endpoint_service
 from app.services.endpoints_service import EndpointService
 from app.schemas.endpoint_schema import EndpointCreate, EndpointEdit, EndpointRead

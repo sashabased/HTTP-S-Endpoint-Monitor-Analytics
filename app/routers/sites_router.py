@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException 
 
-from app.core.exceptions import DatabaseError, NotFoundError, ValidationError
+from app.core.exceptions import NotFoundError, ValidationError, AlreadyExistsError
 from app.services.sites_service import SiteService
-from app.schemas.endpoint_schema import SiteCreate, SiteRead, SiteEdit, SiteReadAdvanced
+from app.schemas.endpoint_schema import SiteCreate, SiteRead, SiteEdit, SiteReadAdvanced, EndpointCreate
 from app.dependencies.service import get_site_service
 
 from typing import List
@@ -67,3 +67,23 @@ async def get_url_by_id(url_id: int, service: SiteService = Depends(get_site_ser
     
     except NotFoundError:
         raise HTTPException(status_code=404, detail="URL not found")
+
+
+@sites.post("/{url_id}/endpoints")
+async def add_endp_to_url(
+    url_id: int, 
+    user_input: EndpointCreate, 
+    service: SiteService = Depends(get_site_service)
+):
+
+    try:
+        response = await service.validate_endp_to_post(url_id, user_input)
+
+        return response
+    
+    except NotFoundError:
+        raise HTTPException(status_code=404, detail="URL not found")
+    
+    except AlreadyExistsError:
+        raise HTTPException(status_code=409, detail="Endpoint already exists")
+    

@@ -11,28 +11,6 @@ class EndpointRepository():
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    # ПЕРЕНЕСТИ В РЕПО САЙТА 
-
-    # async def add_endp_to_url(self, url_id: int, user_input: EndpointCreate):
-
-    #     url_check = await self.session.scalar(select(Site).where(Site.id == url_id))
-
-    #     if url_check:
-
-    #         new_endp = Endpoint(
-    #             path = user_input.path,
-    #             sampling_interval = user_input.sampling_interval,
-    #             is_active = user_input.is_active,
-    #             method = user_input.method,
-    #             timeout = user_input.timeout,
-    #             site_id = url_id
-    #         )
-
-    #         self.session.add(new_endp)
-
-    #         return new_endp
-        
-    #     return None
     
     async def edit_endp(self, endp_id: int, user_input: EndpointEdit):
 
@@ -53,6 +31,7 @@ class EndpointRepository():
         
         return None
     
+
     async def delete_endp(self, endp_id: int):
 
         obj_to_del = await self.session.scalar(
@@ -74,6 +53,7 @@ class EndpointRepository():
                 raise
         
         return False
+    
     
     async def get_endp(self, endp_id: int):
 
