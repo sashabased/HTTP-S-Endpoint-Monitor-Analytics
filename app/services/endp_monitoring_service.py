@@ -44,27 +44,25 @@ class MonitoringSerivce():
 
     async def check_to_ping_endps(self):
         
-        sites = await self.repo.get_active_endpoints_with_sites()
+        endpoints = await self.repo.get_active_endpoints()
         
-        if not sites:
-            print(f"No active endpoints found")
+        if not endpoints:
             return []
 
         all_results = []
 
-        for site in sites:
-            for endp in site.endpoints:
+        for endp in endpoints:
                 
-                full_url = f"{site.base_url}{endp.path}"
+            full_url = f"{endp.site.base_url}{endp.path}"
 
-                ping_result = await self._do_ping(full_url, endp.method, endp.timeout)
+            ping_result = await self._do_ping(full_url, endp.method, endp.timeout)
 
-                result_model = CheckResult(
-                    **ping_result,
-                    endpoint_id=endp.id
-                )
+            result_model = CheckResult(
+                **ping_result,
+                endpoint_id=endp.id
+            )
 
-                all_results.append(result_model)
+            all_results.append(result_model)
         
         await self.repo.bulk_save(all_results)
 

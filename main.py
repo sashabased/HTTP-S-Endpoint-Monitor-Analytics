@@ -12,6 +12,7 @@ from app.core.handlers import register_exception_handler
 from app.routers.endpoints_router import endpoints
 from app.routers.sites_router import sites
 from app.routers.endp_monitoring_router import endp_monitor
+from app.core.worker import run_monitoring_serivce
 
 from contextlib import asynccontextmanager
 
@@ -23,6 +24,9 @@ async def lifespan(app: FastAPI):
     http_client.client = httpx.AsyncClient()
 
     scheduler = AsyncIOScheduler()
+
+    scheduler.add_job(run_monitoring_serivce, "interval", seconds=300)
+
     scheduler.start()
     app.state.scheduler = scheduler
 

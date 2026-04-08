@@ -4,25 +4,51 @@ from app.core.exceptions import DatabaseError
 from typing import List
 
 # from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, or_, func, cast, Interval
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import contains_eager
+from sqlalchemy.orm import contains_eager, joinedload
 from sqlalchemy.exc import SQLAlchemyError
+
 
 class CheckResultRepository():
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_active_endpoints_with_sites(self):
 
-        active_endps = await self.session.scalars(
-            select(Site)
-            .join(Site.endpoints)
-            .options(contains_eager(Site.endpoints))
-            .where(Endpoint.is_active.is_(True))
+    async def get_active_endpoints(self):
+
+        interval_calc = func.cast(
+            func.concat(Endpoint.sampling_interval, ' seconds'),
+            Interval
         )
 
-        return active_endps.unique().all() 
+        subquery = (
+            select(
+                Endpoint.id.label("endpoint_id"),
+                func.max(CheckResult.timestamp).label("last_ts")
+            )
+            .outerjoin(Endpoint.results)
+            .group_by(Endpoint.id)
+            .subquery()
+        )
+
+        query = await self.session.scalars(
+            select(Endpoint)
+            .join(subquery, Endpoint.id == subquery.c.endpoint_id)
+            .join(Endpoint.site)
+            .options(joinedload(Endpoint.site))
+            .where(
+                or_(
+                subquery.c.last_ts.is_(None),
+                func.now() >= subquery.c.last_ts + interval_calc
+                ),
+                Endpoint.is_active == True
+            )
+        )
+
+        response = query.unique().all()
+
+        return response
     
 
     async def bulk_save(self, results: list[CheckResult]):

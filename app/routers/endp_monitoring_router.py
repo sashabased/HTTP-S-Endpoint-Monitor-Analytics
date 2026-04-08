@@ -19,3 +19,9 @@ endp_monitor = APIRouter(
 async def get_all_active_endp(service: MonitoringSerivce = Depends(get_monitoring_service)):
 
     return await service.check_to_ping_endps()
+
+
+@endp_monitor.get("/endpoints")
+async def test_get(service: MonitoringSerivce = Depends(get_monitoring_service)):
+
+    return await service.repo.get_active_endpoints()
