@@ -17,10 +17,7 @@ class CheckResultRepository():
 
     async def get_active_endpoints(self):
 
-        interval_calc = func.cast(
-            func.concat(Endpoint.sampling_interval, ' seconds'),
-            Interval
-        )
+        interval_calc = func.make_interval(secs=Endpoint.sampling_interval)
 
         subquery = (
             select(
@@ -35,14 +32,13 @@ class CheckResultRepository():
         query = await self.session.scalars(
             select(Endpoint)
             .join(subquery, Endpoint.id == subquery.c.endpoint_id)
-            .join(Endpoint.site)
             .options(joinedload(Endpoint.site))
             .where(
                 or_(
                 subquery.c.last_ts.is_(None),
-                func.now() >= subquery.c.last_ts + interval_calc
+                subquery.c.last_ts + interval_calc >= func.now()
                 ),
-                Endpoint.is_active == True
+                Endpoint.is_active.is_(True) 
             )
         )
 

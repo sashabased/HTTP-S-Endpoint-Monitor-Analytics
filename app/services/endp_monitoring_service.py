@@ -1,5 +1,6 @@
 from app import http_client
 
+import asyncio
 import httpx as hx
 
 from app.core.exceptions import NotFoundError, AlreadyExistsError, DatabaseError, ValidationError
@@ -9,6 +10,16 @@ from app.repository.endp_monitoring_repo import CheckResultRepository
 class MonitoringSerivce():
     def __init__(self, repo: CheckResultRepository):
         self.repo = repo
+
+    
+    async def _ping_and_format(self, endp):
+
+        full_url = f"{endp.site.base_url.rstrip('/')}/{endp.path.lstrip('/')}"
+
+        ping_data = await self._do_ping(full_url, endp.method, endp.timeout)
+
+        return CheckResult(**ping_data, endpoint_id=endp.id)
+
 
     async def _do_ping(self, url: str, method: str, timeout: float):
         
@@ -49,21 +60,16 @@ class MonitoringSerivce():
         if not endpoints:
             return []
 
-        all_results = []
+        tasks = []
 
         for endp in endpoints:
-                
-            full_url = f"{endp.site.base_url}{endp.path}"
 
-            ping_result = await self._do_ping(full_url, endp.method, endp.timeout)
-
-            result_model = CheckResult(
-                **ping_result,
-                endpoint_id=endp.id
-            )
-
-            all_results.append(result_model)
+            tasks.append(self._ping_and_format(endp))
         
-        await self.repo.bulk_save(all_results)
+        all_results = await asyncio.gather(*tasks, return_exceptions=True)
+        valid_results = [r for r in all_results if isinstance(r, CheckResult)]
+
+        if valid_results:
+            await self.repo.bulk_save(all_results)
 
         return all_results
