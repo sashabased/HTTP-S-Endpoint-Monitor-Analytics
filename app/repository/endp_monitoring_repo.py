@@ -4,7 +4,7 @@ from app.core.exceptions import DatabaseError
 from typing import List
 
 # from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, or_, func, cast, Interval
+from sqlalchemy import select, or_, func, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import contains_eager, joinedload
 from sqlalchemy.exc import SQLAlchemyError
@@ -17,7 +17,7 @@ class CheckResultRepository():
 
     async def get_active_endpoints(self):
 
-        interval_calc = func.make_interval(secs=Endpoint.sampling_interval)
+        interval_calc = Endpoint.sampling_interval * text("INTERVAL '1 second'")
 
         subquery = (
             select(
@@ -36,7 +36,7 @@ class CheckResultRepository():
             .where(
                 or_(
                 subquery.c.last_ts.is_(None),
-                subquery.c.last_ts + interval_calc >= func.now()
+                subquery.c.last_ts + interval_calc <= func.now()
                 ),
                 Endpoint.is_active.is_(True) 
             )

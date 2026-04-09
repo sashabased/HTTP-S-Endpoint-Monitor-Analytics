@@ -70,6 +70,6 @@ class MonitoringSerivce():
         valid_results = [r for r in all_results if isinstance(r, CheckResult)]
 
         if valid_results:
-            await self.repo.bulk_save(all_results)
+            await self.repo.bulk_save(valid_results)
 
         return all_results
