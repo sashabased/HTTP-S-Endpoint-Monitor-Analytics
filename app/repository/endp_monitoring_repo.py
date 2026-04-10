@@ -9,6 +9,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import contains_eager, joinedload
 from sqlalchemy.exc import SQLAlchemyError
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class CheckResultRepository():
     def __init__(self, session: AsyncSession):
@@ -58,6 +62,6 @@ class CheckResultRepository():
 
         except SQLAlchemyError as e:
             await self.session.rollback()
-            print(f"Failed to bulk save data: {e}") # вместо логгера пока что
+            logger.exception(f"Failed to bulk save data") # теперь логгер
 
             return []

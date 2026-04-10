@@ -7,6 +7,10 @@ from app.core.exceptions import NotFoundError, AlreadyExistsError, DatabaseError
 from app.models.endpointer_models import CheckResult
 from app.repository.endp_monitoring_repo import CheckResultRepository
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 class MonitoringSerivce():
     def __init__(self, repo: CheckResultRepository):
         self.repo = repo
@@ -39,6 +43,8 @@ class MonitoringSerivce():
                 "error_details": None
             }
         except hx.RequestError as exc:
+            logger.warning(f"Network error while pinging {url}: {exc}")
+
             return {
                 "status_code": 0,
                 "response_time": 0.0,
@@ -46,6 +52,8 @@ class MonitoringSerivce():
                 "error_details": f"Network error: {str(exc)}"
             }
         except Exception as e:
+            logger.exception(f"Unexpected error during pinging {url}")
+
             return {
                 "status_code": 0,
                 "response_time": 0.0,
@@ -56,20 +64,26 @@ class MonitoringSerivce():
     async def check_to_ping_endps(self):
         
         endpoints = await self.repo.get_active_endpoints()
-        
         if not endpoints:
+            logger.info("No active endpoints to check")
             return []
 
+        logger.info(f"Starting check for {len(endpoints)} endpoints")
         tasks = []
 
         for endp in endpoints:
 
             tasks.append(self._ping_and_format(endp))
-        
+
         all_results = await asyncio.gather(*tasks, return_exceptions=True)
+        errors_count = sum(1 for r in all_results if isinstance(r, Exception))
+
+        if errors_count > 0:
+            logger.error(f"Task gathering finished with {errors_count} critical errors")
         valid_results = [r for r in all_results if isinstance(r, CheckResult)]
 
         if valid_results:
             await self.repo.bulk_save(valid_results)
-
+            logger.info(f"Succsessfully saved {len(valid_results)} ping results")
+            
         return all_results
