@@ -1,4 +1,4 @@
-from app import http_client
+from app.dependencies import http
 
 import asyncio
 import httpx as hx
@@ -12,8 +12,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 class MonitoringSerivce():
-    def __init__(self, repo: CheckResultRepository):
+    def __init__(self, repo: CheckResultRepository, client: hx.AsyncClient):
         self.repo = repo
+        self.client = client
 
     
     async def _ping_and_format(self, endp):
@@ -29,7 +30,7 @@ class MonitoringSerivce():
         
         try:
             
-            response = await http_client.client.request(
+            response = await self.client.request(
                 method=method,
                 url=url,
                 timeout=timeout,

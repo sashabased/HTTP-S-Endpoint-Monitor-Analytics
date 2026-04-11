@@ -1,26 +1,28 @@
 # base
 class AppError(Exception):
-    "Базовое приложение исключение"
-    pass
+    """Base app exception"""
+    def __init__(self, message: str):
+        self.message = message
+        super().__init__(message)
 
 
 # 4 ключевых категории
 
 class NotFoundError(AppError):
-    "Сущность не найдена"
+    """Entity not found"""
     pass
 
 
 class ValidationError(AppError):
-    "Ошибка валидации входных данных"
+    """Validation error on new data"""
     pass
 
 
 class AlreadyExistsError(AppError):
-    "Конфликт уникальности / уже существует"
+    """Unique conflict / already exists"""
     pass
 
 
 class DatabaseError(AppError):
-    "Любая непредвиденная ошибка БД"
+    """Any database error"""
     pass

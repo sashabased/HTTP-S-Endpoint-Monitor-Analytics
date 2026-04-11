@@ -1,5 +1,8 @@
 from fastapi import Depends
 
+import httpx as hx
+from app.dependencies.http import get_http_client
+
 from app.services.endp_monitoring_service import MonitoringSerivce
 from app.services.sites_service import SiteService
 from app.services.endpoints_service import EndpointService
@@ -16,9 +19,10 @@ from app.dependencies.repositories import (
 
 
 def get_monitoring_service(
-        repo: CheckResultRepository = Depends(get_check_result_repo)
+        repo: CheckResultRepository = Depends(get_check_result_repo),
+        client: hx.AsyncClient = Depends(get_http_client)
 ) -> MonitoringSerivce:
-    return MonitoringSerivce(repo)
+    return MonitoringSerivce(repo, client)
 
 
 def get_site_service(

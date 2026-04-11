@@ -1,14 +1,16 @@
 from dotenv import load_dotenv
 load_dotenv()
 
+import os
+
 import logging
-import httpx
+import httpx as hx
 
 from arq import cron
 from arq.connections import RedisSettings
 
-from app import http_client
-from app.database.session import session_maker
+from app.dependencies.http import get_http_client
+from app.database.session import db_manager
 from app.repository.endp_monitoring_repo import CheckResultRepository
 from app.services.endp_monitoring_service import MonitoringSerivce
 
@@ -16,9 +18,15 @@ logger = logging.getLogger(__name__)
 
 
 async def run_monitoring_task(ctx):
+    client: hx.AsyncClient = ctx['client']
+    session_maker = db_manager.get_session_maker()
+
+    if not client:
+        logger.exception("ARQ: cannot get httpx client for worker")
+
     async with session_maker() as session:
         repo = CheckResultRepository(session)
-        service = MonitoringSerivce(repo)
+        service = MonitoringSerivce(repo, client)
 
         logger.info("ARQ: Monitoring cycle started")
 
@@ -30,12 +38,21 @@ async def run_monitoring_task(ctx):
 
 
 async def startup(ctx):
-    http_client.client = httpx.AsyncClient()
+    ctx['client'] = hx.AsyncClient()
+    db_manager.init(os.getenv("DATABASE_URL"))
+
     logger.info("ARQ: Worker started")
 
+
 async def shutdown(ctx):
-    await http_client.client.aclose()
+    client: hx.AsyncClient = ctx.get('client')
+
+    await db_manager.close()
+
+    if client:
+        await client.aclose()
     logger.info("ARQ: Worker stopped")
+
 
 class WorkerSettings:
     functions = [run_monitoring_task]
