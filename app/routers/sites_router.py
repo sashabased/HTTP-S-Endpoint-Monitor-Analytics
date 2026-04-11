@@ -1,9 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException 
+from fastapi import APIRouter
 
-from app.core.exceptions import NotFoundError, ValidationError, AlreadyExistsError
-from app.services.sites_service import SiteService
 from app.schemas.endpoint_schema import SiteCreate, SiteRead, SiteEdit, SiteReadAdvanced, EndpointCreate
-from app.dependencies.service import get_site_service
+from app.dependencies.service import SiteServiceDep
 
 from typing import List
 
@@ -15,7 +13,10 @@ sites = APIRouter(
 
 
 @sites.post("/", response_model=SiteRead)
-async def post_user_url(user_input: SiteCreate, service: SiteService = Depends(get_site_service)):
+async def post_user_url(
+    user_input: SiteCreate, 
+    service: SiteServiceDep
+):
 
     response = await service.create_url(user_input)
     
@@ -23,7 +24,7 @@ async def post_user_url(user_input: SiteCreate, service: SiteService = Depends(g
 
 
 @sites.get("/", response_model=List[SiteRead])
-async def get_all_urls(service: SiteService = Depends(get_site_service)):
+async def get_all_urls(service: SiteServiceDep):
     
     response = await service.get_urls()
     
@@ -31,7 +32,11 @@ async def get_all_urls(service: SiteService = Depends(get_site_service)):
 
 
 @sites.patch("/{url_id}", response_model=SiteRead)
-async def patch_url_by_id(url_id: int, user_input: SiteEdit, service: SiteService = Depends(get_site_service)):
+async def patch_url_by_id(
+    url_id: int, 
+    user_input: SiteEdit, 
+    service: SiteServiceDep
+):
 
     response = await service.update_url(url_id, user_input)
 
@@ -39,7 +44,10 @@ async def patch_url_by_id(url_id: int, user_input: SiteEdit, service: SiteServic
     
 
 @sites.delete("/{url_id}", status_code=200)
-async def delete_url_by_id(url_id: int, service: SiteService = Depends(get_site_service)):
+async def delete_url_by_id(
+    url_id: int, 
+    service: SiteServiceDep
+):
 
     await service.delete_url(url_id)
 
@@ -47,7 +55,10 @@ async def delete_url_by_id(url_id: int, service: SiteService = Depends(get_site_
 
 
 @sites.get("/{url_id}", response_model=SiteReadAdvanced)
-async def get_url_by_id(url_id: int, service: SiteService = Depends(get_site_service)):
+async def get_url_by_id(
+    url_id: int, 
+    service: SiteServiceDep
+):
 
     response = await service.get_url(url_id)
 
@@ -58,7 +69,7 @@ async def get_url_by_id(url_id: int, service: SiteService = Depends(get_site_ser
 async def add_endp_to_url(
     url_id: int, 
     user_input: EndpointCreate, 
-    service: SiteService = Depends(get_site_service)
+    service: SiteServiceDep
 ):
 
     response = await service.create_endpoint(url_id, user_input)

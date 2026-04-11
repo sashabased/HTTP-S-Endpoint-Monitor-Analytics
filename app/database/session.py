@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine, AsyncSession
-import os
+
 
 class DBSessionManager:
     def __init__(self):
@@ -23,7 +23,7 @@ class DBSessionManager:
             return
         
         await self._engine.dispose()
-        
+
         self._engine = None
         self._session_maker = None
 

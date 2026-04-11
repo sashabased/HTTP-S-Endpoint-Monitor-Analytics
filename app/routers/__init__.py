@@ -6,5 +6,5 @@ from app.routers.sites_router import sites
 router = APIRouter()
 
 router.include_router(endp_monitor)
-router.include_router(endp_monitor)
-router.include_router(endp_monitor)
+router.include_router(endpoints)
+router.include_router(sites)
