@@ -5,14 +5,14 @@ import httpx as hx
 
 from app.core.exceptions import NotFoundError, AlreadyExistsError, DatabaseError, ValidationError
 from app.models.endpointer_models import CheckResult
-from app.repository.endp_monitoring_repo import CheckResultRepository
+from app.repository.interfaces import CheckResultRepositoryProtocol
 
 import logging
 
 logger = logging.getLogger(__name__)
 
 class MonitoringSerivce():
-    def __init__(self, repo: CheckResultRepository, client: hx.AsyncClient):
+    def __init__(self, repo: CheckResultRepositoryProtocol, client: hx.AsyncClient):
         self.repo = repo
         self.client = client
 

@@ -2,10 +2,10 @@ import urllib.parse as ups
 
 from app.core.exceptions import NotFoundError, ValidationError
 from app.schemas.endpoint_schema import SiteCreate, SiteEdit, EndpointCreate
-from app.repository.sites_repo import SiteRepository
+from app.repository.interfaces import SiteRepositoryProtocol
 
 class SiteService():
-    def __init__(self, repo: SiteRepository):
+    def __init__(self, repo: SiteRepositoryProtocol):
         self.repo = repo
 
 

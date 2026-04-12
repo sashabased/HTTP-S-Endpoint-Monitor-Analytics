@@ -1,8 +1,7 @@
 from fastapi import APIRouter
 
 from app.dependencies.service import EndpointServiceDep
-from app.schemas.endpoint_schema import EndpointCreate, EndpointEdit, EndpointRead
-
+from app.schemas.endpoint_schema import EndpointEdit, EndpointRead
 
 
 endpoints = APIRouter(

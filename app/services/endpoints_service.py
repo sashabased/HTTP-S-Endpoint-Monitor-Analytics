@@ -1,11 +1,11 @@
 from app.core.exceptions import NotFoundError 
 from app.models.endpointer_models import Site, Endpoint, CheckResult
 from app.schemas.endpoint_schema import EndpointEdit
-from app.repository.endpoints_repo import EndpointRepository
+from app.repository.interfaces import EndpointsRepositoryProtocol
 
 
 class EndpointService():
-    def __init__(self, repo: EndpointRepository):
+    def __init__(self, repo: EndpointsRepositoryProtocol):
         self.repo = repo
 
         
