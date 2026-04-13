@@ -23,26 +23,22 @@ class CheckResultRepository():
 
         interval_calc = Endpoint.sampling_interval * text("INTERVAL '1 second'")
 
-        subquery = (
-            select(
-                Endpoint.id.label("endpoint_id"),
-                func.max(CheckResult.timestamp).label("last_ts")
-            )
-            .outerjoin(Endpoint.results)
-            .group_by(Endpoint.id)
-            .subquery()
+        last_check_subq = (
+            select(func.max(CheckResult.timestamp))
+            .where(CheckResult.endpoint_id == Endpoint.id)
+            .correlate(Endpoint)
+            .scalar_subquery()
         )
 
         query = await self.session.scalars(
             select(Endpoint)
-            .join(subquery, Endpoint.id == subquery.c.endpoint_id)
             .options(joinedload(Endpoint.site))
             .where(
+                Endpoint.is_active.is_(True),
                 or_(
-                subquery.c.last_ts.is_(None),
-                subquery.c.last_ts + interval_calc <= func.now()
-                ),
-                Endpoint.is_active.is_(True) 
+                    last_check_subq.is_(None),
+                    last_check_subq + interval_calc <= func.now()
+                )
             )
         )
 

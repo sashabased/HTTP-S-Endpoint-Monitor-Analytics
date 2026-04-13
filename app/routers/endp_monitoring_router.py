@@ -13,7 +13,8 @@ async def get_all_active_endp(service: CheckResltServiceDep):
     return await service.check_to_ping_endps()
 
 
-@endp_monitor.get("/endpoints")
-async def test_get(service: CheckResltServiceDep):
+# Функция неактуальна вызывает метод репозитория, что не есть хорошо
+# @endp_monitor.get("/endpoints")
+# async def test_get(service: CheckResltServiceDep):
 
-    return await service.repo.get_active_endpoints()
+#     return await service.repo.get_active_endpoints()
