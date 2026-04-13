@@ -1,35 +1,29 @@
-from app.dependencies import http
-
 import asyncio
 import httpx as hx
 
-from app.core.exceptions import NotFoundError, AlreadyExistsError, DatabaseError, ValidationError
 from app.models.endpointer_models import CheckResult
-from app.repository.interfaces import CheckResultRepositoryProtocol
+from app.repository.interfaces import UnitOfWorkProtocol
 
 import logging
 
 logger = logging.getLogger(__name__)
 
+
 class MonitoringSerivce():
-    def __init__(self, repo: CheckResultRepositoryProtocol, client: hx.AsyncClient):
-        self.repo = repo
+    def __init__(self, uow: UnitOfWorkProtocol, client: hx.AsyncClient):
+        self.uow = uow
         self.client = client
 
     
     async def _ping_and_format(self, endp):
-
         full_url = f"{endp.site.base_url.rstrip('/')}/{endp.path.lstrip('/')}"
-
         ping_data = await self._do_ping(full_url, endp.method, endp.timeout)
 
         return CheckResult(**ping_data, endpoint_id=endp.id)
 
 
     async def _do_ping(self, url: str, method: str, timeout: float):
-        
         try:
-            
             response = await self.client.request(
                 method=method,
                 url=url,
@@ -62,9 +56,11 @@ class MonitoringSerivce():
                 "error_details": f"Unknown error: {str(e)}"
             }
 
+
     async def check_to_ping_endps(self):
-        
-        endpoints = await self.repo.get_active_endpoints()
+        async with self.uow:
+            endpoints = await self.uow.check_results.get_active_endpoints()
+
         if not endpoints:
             logger.info("No active endpoints to check")
             return []
@@ -84,7 +80,12 @@ class MonitoringSerivce():
         valid_results = [r for r in all_results if isinstance(r, CheckResult)]
 
         if valid_results:
-            await self.repo.bulk_save(valid_results)
-            logger.info(f"Succsessfully saved {len(valid_results)} ping results")
+            try:
+                async with self.uow:
+                    await self.uow.check_results.bulk_save(valid_results)
+
+                logger.info(f"Succsessfully saved {len(valid_results)} ping results")
+            except Exception as e:
+                logger.error(f"Failed to save results: {e}")
             
-        return all_results
+        return valid_results

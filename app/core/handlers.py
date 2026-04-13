@@ -1,5 +1,6 @@
 from fastapi import Request, FastAPI
 from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
 
 import logging
 
@@ -34,6 +35,18 @@ async def validation_error_handler(request: Request, exc: ValidationError):
     )
 
 
+async def validation_fastapi_error_handler(request: Request, exc: RequestValidationError):
+    errors = exc.errors()
+    error = errors[0]
+    field = error.get("loc")[-1]
+    msg = error.get("msg")
+    
+    return JSONResponse(
+        status_code=422,
+        content={"detail": f"Error in input field '{field}': {msg}"}
+    )
+
+
 async def database_error_handler(request: Request, exc: DatabaseError):
     logger.error(f"Unhandled error: {exc}")
     return JSONResponse(
@@ -56,3 +69,4 @@ def register_exception_handler(app: FastAPI):
     app.add_exception_handler(ValidationError, validation_error_handler)
     app.add_exception_handler(DatabaseError, database_error_handler)
     app.add_exception_handler(Exception, generic_handler)
+    app.add_exception_handler(RequestValidationError, validation_fastapi_error_handler)

@@ -2,6 +2,7 @@ from typing import Protocol, List
 
 from app.models.endpointer_models import CheckResult, Site, Endpoint
 from app.schemas.endpoint_schema import EndpointEdit, EndpointCreate, SiteCreate, SiteEdit
+from app.UnitOfWork.uow import UnitOfWork
 
 
 class CheckResultRepositoryProtocol(Protocol):
@@ -33,3 +34,12 @@ class SiteRepositoryProtocol(Protocol):
         ...
     async def add_endpoint(self, url_id: int, user_input: EndpointCreate) -> Endpoint:
         ...
+
+
+class UnitOfWorkProtocol(Protocol):
+    sites: SiteRepositoryProtocol
+    endpoints: EndpointsRepositoryProtocol
+    check_results: CheckResultRepositoryProtocol
+
+    async def __aenter__(self) -> "UnitOfWorkProtocol": ...
+    async def __aexit__(self, exc_type, exc_val, exc_tb): ...
